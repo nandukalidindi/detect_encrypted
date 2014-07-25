@@ -1,22 +1,12 @@
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
 
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-
-import com.aspose.cells.FileFormatUtil;
 import com.aspose.cells.Workbook;
-import com.aspose.slides.PresentationEx;
 
 public class DetectEncrypted {
    public static ArrayList<String> encryptedFiles = new ArrayList<String>();
@@ -102,15 +92,15 @@ public class DetectEncrypted {
 			if(fileExtension.equalsIgnoreCase(".xls")){
 				try{
 					FileInputStream file = new FileInputStream(new File(filePath.toString()));
-					HSSFWorkbook workbook = new HSSFWorkbook(file);
-					if(workbook.isWriteProtected()){
+					Workbook workbook = new Workbook(file);
+				}
+				catch (Exception e){
+					if(e.toString().contains("Please provide password for the Workbook file.")){
 						System.out.println(filePath.toString());
 						writer.append(filePath.toString());
 					    writer.append("\n");
 					    writer.flush();
 					}
-				}
-				catch (Exception e){
 					System.out.println("EXCEPTION: " + e.getMessage() + " <--> " + filePath.toString());
 				}
 			}
