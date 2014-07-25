@@ -15,14 +15,17 @@ import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 
 import com.aspose.cells.FileFormatUtil;
+import com.aspose.cells.Workbook;
+import com.aspose.slides.PresentationEx;
 
 public class DetectEncrypted {
    public static ArrayList<String> encryptedFiles = new ArrayList<String>();
    public static Map<String, String> extensionMap;
-   public static String fileType;
+   public static String fileType, fileName = "/EncryptedFiles-" + new Date().getTime() + ".csv";
+   public static FileWriter writer;
 	public static void main(String args[]) throws Throwable{
-		String homePath, csvPath;
-		csvPath = new java.io.File( "." ).getCanonicalPath();
+		String homePath, csvPath = new java.io.File( "." ).getCanonicalPath();
+		writer = new FileWriter(csvPath + fileName);
 		homePath = args[0];
 		fileType = args[1];
 		if(!(new File(homePath).isDirectory())){
@@ -30,13 +33,22 @@ public class DetectEncrypted {
 			return;
 		}
 			
-		if(!(fileType.equalsIgnoreCase("Document") || fileType.equalsIgnoreCase("SpreadSpheet") || fileType.equalsIgnoreCase("Presentation") || fileType.equalsIgnoreCase("PDF") || fileType.equalsIgnoreCase("All"))){
+		if(!(fileType.equalsIgnoreCase("Document") || fileType.equalsIgnoreCase("SpreadSheet") || fileType.equalsIgnoreCase("Presentation") || fileType.equalsIgnoreCase("PDF") || fileType.equalsIgnoreCase("All"))){
 			System.out.println("Enter a Valid FileType!!");
 			return;
 		}
 		extensionMap = createExtensionMap();
-		recurseFolders(homePath);
-		writeToCSV(csvPath);
+		try{
+			recurseFolders(homePath);
+		}
+		catch(Exception e){
+			System.out.println("EXCEPTION: " + e.getCause());
+		}
+		finally{
+			writer.close();
+		    System.out.println("Encrypted Files list written successfully to " + csvPath + fileName);
+
+		}
 	}
 	
 	static void recurseFolders(String folderName) throws Throwable{
@@ -61,85 +73,106 @@ public class DetectEncrypted {
 				com.aspose.words.FileFormatInfo info = com.aspose.words.FileFormatUtil.detectFileFormat(filePath.toString());
 				if(info.isEncrypted()){
 					System.out.println(filePath.toString());
-					encryptedFiles.add(filePath.toString());
+					writer.append(filePath.toString());
+				    writer.append("\n");
+				    writer.flush();
 				}
-			} catch ( com.aspose.words.FileCorruptedException e){
+			} /*catch ( com.aspose.words.FileCorruptedException e){
 				System.out.println("CORRUPTED/DAMAGED: " + filePath.toString());
+			} */catch (Exception e){
+				System.out.println("EXCEPTION: " + e.getCause() + " <--> " + filePath.toString());
 			}
 		}
 		else if(extensionMap.get("SpreadSheet").contains(fileExtension) && (fileType.equalsIgnoreCase("SpreadSheet") || fileType.equalsIgnoreCase("All"))){
-			try{
-				com.aspose.cells.FileFormatInfo in = com.aspose.cells.FileFormatUtil.detectFileFormat(filePath.toString());
-				if(in.isEncrypted()){
-					System.out.println(filePath.toString());
-					encryptedFiles.add(filePath.toString());
+			if(fileExtension.equalsIgnoreCase(".xlsx")){
+				try{
+					com.aspose.cells.FileFormatInfo in = com.aspose.cells.FileFormatUtil.detectFileFormat(filePath.toString());
+					if(in.isEncrypted()){
+						System.out.println(filePath.toString());
+						writer.append(filePath.toString());
+					    writer.append("\n");
+					    writer.flush();
+					}
+				} /*catch (com.aspose.cells.CellsException e){
+					System.out.println("CORRUPTED/DAMAGED: " + filePath.toString());
+				} */catch (Exception e){
+					System.out.println("EXCEPTION: " + e.getCause() + " <--> " + filePath.toString());
 				}
-			} catch (com.aspose.cells.CellsException e){
-				System.out.println("CORRUPTED/DAMAGED: " + filePath.toString());
+			}
+			if(fileExtension.equalsIgnoreCase(".xls")){
+				try{
+					FileInputStream file = new FileInputStream(new File(filePath.toString()));
+					HSSFWorkbook workbook = new HSSFWorkbook(file);
+					if(workbook.isWriteProtected()){
+						System.out.println(filePath.toString());
+						writer.append(filePath.toString());
+					    writer.append("\n");
+					    writer.flush();
+					}
+				}
+				catch (Exception e){
+					System.out.println("EXCEPTION: " + e.getMessage() + " <--> " + filePath.toString());
+				}
 			}
 		}
 		
 		else if(extensionMap.get("Presentation").contains(fileExtension) && (fileType.equalsIgnoreCase("Presentation") || fileType.equalsIgnoreCase("All"))){
-			try{
-		       com.aspose.slides.Presentation pres = new com.aspose.slides.Presentation(filePath.toString());
-			} catch (com.aspose.slides.InvalidPasswordException e) {
-		       System.out.println(filePath.toString());		 
-		       encryptedFiles.add(filePath.toString());
-			} catch (com.aspose.slides.PptxCorruptFileException e) {
-				System.out.println("CORRUPTED/DAMAGED: " + filePath.toString());
+			if(fileExtension.equalsIgnoreCase(".ppt")){
+				try{
+			       com.aspose.slides.Presentation pres = new com.aspose.slides.Presentation(filePath.toString());			       
+				} catch (com.aspose.slides.InvalidPasswordException e) {
+			       System.out.println(filePath.toString());		 
+			       writer.append(filePath.toString());
+				    writer.append("\n");
+				    writer.flush();
+				}
+				catch (Exception e){
+					System.out.println("EXCEPTION: " + e.getCause() + " <--> " + filePath.toString());
+				}
+			}
+			if(fileExtension.equalsIgnoreCase(".pptx")){
+				try{
+					com.aspose.slides.PresentationEx pre = new com.aspose.slides.PresentationEx(filePath.toString());
+					if(pre.isEncrypted()){
+						System.out.println(filePath.toString());		 
+					       writer.append(filePath.toString());
+						    writer.append("\n");
+						    writer.flush();
+					}
+				}
+				catch (Exception e){
+					System.out.println("EXCEPTION: " + e.getCause() + " <--> " + filePath.toString());
+
+				}
+				
 			}
 		}
 		
 		else if(extensionMap.get("PDF").contains(fileExtension) && (fileType.equalsIgnoreCase("PDF") || fileType.equalsIgnoreCase("All"))){
 			com.aspose.pdf.facades.PdfFileInfo pdfFileInfo = null;
 			try{
+				com.aspose.pdf.Document pdfDocument = new com.aspose.pdf.Document(filePath.toString());
 				pdfFileInfo = new com.aspose.pdf.facades.PdfFileInfo(filePath.toString());
-				if (pdfFileInfo.isPdfFile() && (pdfFileInfo.hasOpenPassword() || pdfFileInfo.hasEditPassword())){
+				if (pdfFileInfo.hasOpenPassword() && pdfFileInfo.hasEditPassword()){
 		        	System.out.println(filePath.toString());
-		        	encryptedFiles.add(filePath.toString());
+		        	writer.append(filePath.toString());
+				    writer.append("\n");
+				    writer.flush();
 				}
-			}
-			catch(com.aspose.pdf.exceptions.PdfException e){
+			} /*catch(com.aspose.pdf.exceptions.PdfException e){
 				System.out.println("CORRUPTED/DAMAGED: " + filePath.toString());
+			} */catch (Exception e){
+				System.out.println("EXCEPTION: " + e.getCause() + " <--> " + filePath.toString());
 			}
 		}
-	}
-	
-	static int returnExtension(String fileExtension, Map<Integer, String> extensionMap) throws Throwable{
-		for(int i=0; i<extensionMap.size(); i++){
-			System.out.println(extensionMap.get(i+1));
-			if(extensionMap.get(i+1).contains(fileExtension))
-				return i+1;
-		}
-		return 0;
 	}
 	
 	static Map<String, String> createExtensionMap() throws Throwable{
 		Map<String, String> extensionMap = new HashMap<String, String>();
 		extensionMap.put("Document", ".doc, .docx, .xml,");
-		extensionMap.put("SpreadSheet", ".xls, .xlsx, .csv");
+		extensionMap.put("SpreadSheet", ".xls, .xlsx");
 		extensionMap.put("Presentation", ".ppt, .pptx");
 		extensionMap.put("PDF", ".pdf");
 		return extensionMap;
-	}
-	
-	static void writeToCSV(String csvPath) throws IOException{
-		String fileName;
-		fileName = "/EncryptedFiles-" + new Date().getTime() + ".csv";
-		try
-		{
-		    FileWriter writer = new FileWriter(csvPath + fileName);
-		    for(int i=0; i<encryptedFiles.size(); i++){
-			    writer.append(encryptedFiles.get(i));
-			    writer.append("\n");
-		    }	 
-		    writer.flush();
-		    writer.close();
-		    System.out.println("Encrypted Files list written successfully to " + csvPath + fileName);
-		}
-		catch(IOException e)
-		{
-		     e.printStackTrace();
-		} 	
 	}
 }
