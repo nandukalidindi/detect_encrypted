@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="resources"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 	<classpathentry kind="lib" path="/Users/nandukalidindi/Documents/Workspaces/EclipseWorkspace/Jars/aspose.words.jdk16-7.0.0.jar"/>
-	<classpathentry kind="lib" path="/Users/nandukalidindi/Documents/Workspaces/EclipseWorkspace/Jars/aspose-cells-8.1.1.jar"/>
 	<classpathentry kind="lib" path="/Users/nandukalidindi/Documents/Workspaces/EclipseWorkspace/Jars/aspose-pdf-9.3.0-jdk16.jar"/>
 	<classpathentry kind="lib" path="/Users/nandukalidindi/Documents/Workspaces/EclipseWorkspace/Jars/poi-3.8.jar"/>
 	<classpathentry kind="lib" path="/Users/nandukalidindi/Documents/Workspaces/EclipseWorkspace/Jars/aspose.slides-8.7.0.jar"/>
+	<classpathentry kind="lib" path="/Users/nandukalidindi/Documents/Workspaces/EclipseWorkspace/Jars/aspose-cells-8.1.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

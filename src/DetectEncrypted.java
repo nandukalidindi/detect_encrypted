@@ -1,19 +1,19 @@
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.aspose.cells.Workbook;
-
 public class DetectEncrypted {
    public static ArrayList<String> encryptedFiles = new ArrayList<String>();
    public static Map<String, String> extensionMap;
-   public static String fileType, fileName = "/EncryptedFiles-" + new Date().getTime() + ".csv";
    public static FileWriter writer;
-	public static void main(String args[]) throws Throwable{
+   public static String fileType, fileName = "/EncryptedFiles-" + new Date().getTime() + ".csv";
+//   public static final long INGEST_TIME = 14566677;
+	public static void main(String args[]) throws Throwable{	
 		String homePath, csvPath = new java.io.File( "." ).getCanonicalPath();
 		writer = new FileWriter(csvPath + fileName);
 		homePath = args[0];
@@ -27,14 +27,13 @@ public class DetectEncrypted {
 			System.out.println("Enter a Valid FileType!!");
 			return;
 		}
+		loadLicenseFiles();
 		extensionMap = createExtensionMap();
 		try{
 			recurseFolders(homePath);
-		}
-		catch(Exception e){
+		} catch(Exception e){
 			System.out.println("EXCEPTION: " + e.getCause());
-		}
-		finally{
+		} finally{
 			writer.close();
 		    System.out.println("Encrypted Files list written successfully to " + csvPath + fileName);
 
@@ -67,12 +66,12 @@ public class DetectEncrypted {
 				    writer.append("\n");
 				    writer.flush();
 				}
-			} /*catch ( com.aspose.words.FileCorruptedException e){
-				System.out.println("CORRUPTED/DAMAGED: " + filePath.toString());
-			} */catch (Exception e){
+			} catch (Exception e){
 				System.out.println("EXCEPTION: " + e.getCause() + " <--> " + filePath.toString());
 			}
 		}
+		
+		
 		else if(extensionMap.get("SpreadSheet").contains(fileExtension) && (fileType.equalsIgnoreCase("SpreadSheet") || fileType.equalsIgnoreCase("All"))){
 			if(fileExtension.equalsIgnoreCase(".xlsx")){
 				try{
@@ -83,16 +82,14 @@ public class DetectEncrypted {
 					    writer.append("\n");
 					    writer.flush();
 					}
-				} /*catch (com.aspose.cells.CellsException e){
-					System.out.println("CORRUPTED/DAMAGED: " + filePath.toString());
-				} */catch (Exception e){
+				} catch (Exception e){
 					System.out.println("EXCEPTION: " + e.getCause() + " <--> " + filePath.toString());
 				}
 			}
 			if(fileExtension.equalsIgnoreCase(".xls")){
 				try{
 					FileInputStream file = new FileInputStream(new File(filePath.toString()));
-					Workbook workbook = new Workbook(file);
+					com.aspose.cells.Workbook workbook = new com.aspose.cells.Workbook(file);
 				}
 				catch (Exception e){
 					if(e.toString().contains("Please provide password for the Workbook file.")){
@@ -124,10 +121,10 @@ public class DetectEncrypted {
 				try{
 					com.aspose.slides.PresentationEx pre = new com.aspose.slides.PresentationEx(filePath.toString());
 					if(pre.isEncrypted()){
-						System.out.println(filePath.toString());		 
-					       writer.append(filePath.toString());
-						    writer.append("\n");
-						    writer.flush();
+					   System.out.println(filePath.toString());		 
+				       writer.append(filePath.toString());
+					   writer.append("\n");
+					   writer.flush();
 					}
 				}
 				catch (Exception e){
@@ -141,7 +138,7 @@ public class DetectEncrypted {
 		else if(extensionMap.get("PDF").contains(fileExtension) && (fileType.equalsIgnoreCase("PDF") || fileType.equalsIgnoreCase("All"))){
 			com.aspose.pdf.facades.PdfFileInfo pdfFileInfo = null;
 			try{
-				com.aspose.pdf.Document pdfDocument = new com.aspose.pdf.Document(filePath.toString());
+			//	com.aspose.pdf.Document pdfDocument = new com.aspose.pdf.Document(filePath.toString());
 				pdfFileInfo = new com.aspose.pdf.facades.PdfFileInfo(filePath.toString());
 				if (pdfFileInfo.hasOpenPassword() && pdfFileInfo.hasEditPassword()){
 		        	System.out.println(filePath.toString());
@@ -149,9 +146,7 @@ public class DetectEncrypted {
 				    writer.append("\n");
 				    writer.flush();
 				}
-			} /*catch(com.aspose.pdf.exceptions.PdfException e){
-				System.out.println("CORRUPTED/DAMAGED: " + filePath.toString());
-			} */catch (Exception e){
+			} catch (Exception e){
 				System.out.println("EXCEPTION: " + e.getCause() + " <--> " + filePath.toString());
 			}
 		}
@@ -164,5 +159,26 @@ public class DetectEncrypted {
 		extensionMap.put("Presentation", ".ppt, .pptx");
 		extensionMap.put("PDF", ".pdf");
 		return extensionMap;
+	}
+	
+	static void loadLicenseFiles() throws Throwable{
+		InputStream url;		
+		url = DetectEncrypted.class.getResourceAsStream("Aspose.Words.lic.xml");
+		com.aspose.words.License licenseWords = new com.aspose.words.License();
+		licenseWords.setLicense(url);
+		
+		url = DetectEncrypted.class.getResourceAsStream("Aspose.Cells.lic.xml");
+		com.aspose.cells.License licenseCells = new com.aspose.cells.License();
+		licenseCells.setLicense(url);
+		
+		url = DetectEncrypted.class.getResourceAsStream("Aspose.Slides.lic.xml");
+		com.aspose.slides.License licenseSlides = new com.aspose.slides.License();
+		licenseSlides.setLicense(url);
+		
+		url = DetectEncrypted.class.getResourceAsStream("Aspose.Pdf.lic.xml");
+		com.aspose.pdf.License licensePDF = new com.aspose.pdf.License();
+		licensePDF.setLicense(url);
+		
+		System.out.println("Licenses loaded Successfully!!");
 	}
 }
